@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Walentynka 💖</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #ffe6eb;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        text-align: center;
+        transform: translateX(-20px);
+        position: relative;
+        z-index: 10;
+    }
+
+    h1 {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        font-size: 32px;
+        margin-bottom: 30px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        position: relative;
+    }
+
+    button {
+        font-size: 24px;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    #yes {
+        background-color: #ff5c8a;
+        color: white;
+    }
+
+    #no {
+        background-color: #cccccc;
+        position: relative; /* start normalnie */
+    }
+
+    .big-heart {
+        font-size: 120px;
+        margin-top: 20px;
+    }
+
+    .heart {
+        position: fixed;
+        color: #ff5c8a;
+        font-size: 24px;
+        animation: floatUp 3s linear forwards;
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    @keyframes floatUp {
+        from {
+            transform: translateY(100vh);
+            opacity: 1;
+        }
+        to {
+            transform: translateY(-10vh);
+            opacity: 0;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container" id="content">
+    <h1>TOSIU 💕</h1>
+    <h2>Zostaniesz moją walentynką? ❤️</h2>
+    <div class="buttons" id="buttons">
+        <button id="yes">Tak</button>
+        <button id="no">Nie</button>
+    </div>
+</div>
+
+<script>
+    const noBtn = document.getElementById("no");
+    const yesBtn = document.getElementById("yes");
+    const content = document.getElementById("content");
+    const buttons = document.getElementById("buttons");
+
+    let floating = false;
+
+    function moveNo() {
+        if (!floating) {
+            // odpinamy od układu, ale zostaje w tym samym miejscu
+            const rect = noBtn.getBoundingClientRect();
+            noBtn.style.position = "fixed";
+            noBtn.style.left = rect.left + "px";
+            noBtn.style.top = rect.top + "px";
+            floating = true;
+        }
+
+        const containerRect = content.getBoundingClientRect();
+        const padding = 60; // jak daleko od nagłówka może uciec
+
+        const minX = Math.max(0, containerRect.left - padding);
+        const maxX = Math.min(
+            window.innerWidth - noBtn.offsetWidth,
+            containerRect.right + padding - noBtn.offsetWidth
+        );
+
+        const minY = Math.max(0, containerRect.top - padding);
+        const maxY = Math.min(
+            window.innerHeight - noBtn.offsetHeight,
+            containerRect.bottom + padding - noBtn.offsetHeight
+        );
+
+        const yesRect = yesBtn.getBoundingClientRect();
+
+        let x, y;
+        let tries = 0;
+        let ok = false;
+
+        while (!ok && tries < 30) {
+            x = minX + Math.random() * (maxX - minX);
+            y = minY + Math.random() * (maxY - minY);
+            tries++;
+
+            const noRect = {
+                left: x,
+                top: y,
+                right: x + noBtn.offsetWidth,
+                bottom: y + noBtn.offsetHeight
+            };
+
+            const buffer = 20;
+
+            const overlap = !(
+                noRect.right < yesRect.left - buffer ||
+                noRect.left > yesRect.right + buffer ||
+                noRect.bottom < yesRect.top - buffer ||
+                noRect.top > yesRect.bottom + buffer
+            );
+
+            if (!overlap) ok = true;
+        }
+
+        if (ok) {
+            noBtn.style.left = x + "px";
+            noBtn.style.top = y + "px";
+        }
+    }
+
+    noBtn.addEventListener("mouseenter", moveNo);
+
+    // Serduszka w tle
+    function createHeart() {
+        const heart = document.createElement("div");
+        heart.classList.add("heart");
+        heart.innerText = "💖";
+        heart.style.left = Math.random() * window.innerWidth + "px";
+        heart.style.fontSize = (16 + Math.random() * 24) + "px";
+
+        document.body.appendChild(heart);
+
+        setTimeout(() => heart.remove(), 3000);
+    }
+
+    // Start po 1 sekundzie
+   setTimeout(() => {
+    setInterval(createHeart, 40); // mniejsza liczba = więcej serc = szybciej
+}, 400); // start od razu po wejściu
+    // Klik "Tak"
+    yesBtn.addEventListener("click", () => {
+    content.innerHTML = `
+        <h1>Juppppppi 💖</h1>
+        <div class="big-heart">💘</div>
+    `;
+
+    // Funkcja tworząca serce lecące do środka
+    function flyHeart(fromLeft) {
+        const heart = document.createElement("div");
+        heart.innerText = "💗";
+        heart.style.position = "fixed";
+        heart.style.top = (Math.random() * window.innerHeight) + "px";
+        heart.style.fontSize = (30 + Math.random() * 30) + "px";
+        heart.style.zIndex = 1000;
+        heart.style.transition = "transform 1.2s linear, opacity 1.2s linear";
+
+        if (fromLeft) {
+            heart.style.left = "-60px";
+        } else {
+            heart.style.left = (window.innerWidth + 60) + "px";
+        }
+
+        document.body.appendChild(heart);
+
+        // wymuś repaint
+        heart.getBoundingClientRect();
+
+        const targetX = window.innerWidth / 2 + (Math.random() * 200 - 100);
+
+        if (fromLeft) {
+            heart.style.transform = `translateX(${targetX}px)`;
+        } else {
+            heart.style.transform = `translateX(-${window.innerWidth - targetX}px)`;
+        }
+
+        heart.style.opacity = "0";
+
+        setTimeout(() => heart.remove(), 1300);
+    }
+
+    // Co 200 ms wysyłamy serca z obu stron
+    setInterval(() => {
+        flyHeart(true);
+        flyHeart(false);
+    }, 200);
+});
+</script>
+
+</body>
+</html>
