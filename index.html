@@ -54,32 +54,12 @@
 
     #no {
         background-color: #cccccc;
-        position: relative; /* start normalnie */
+        position: relative;
     }
 
     .big-heart {
         font-size: 120px;
         margin-top: 20px;
-    }
-
-    .heart {
-        position: fixed;
-        color: #ff5c8a;
-        font-size: 24px;
-        animation: floatUp 3s linear forwards;
-        pointer-events: none;
-        opacity: 0.8;
-    }
-
-    @keyframes floatUp {
-        from {
-            transform: translateY(100vh);
-            opacity: 1;
-        }
-        to {
-            transform: translateY(-10vh);
-            opacity: 0;
-        }
     }
 </style>
 </head>
@@ -88,147 +68,200 @@
 <div class="container" id="content">
     <h1>TOSIU 💕</h1>
     <h2>Zostaniesz moją walentynką? ❤️</h2>
-    <div class="buttons" id="buttons">
+    <div class="buttons">
         <button id="yes">Tak</button>
         <button id="no">Nie</button>
     </div>
 </div>
 
 <script>
-    const noBtn = document.getElementById("no");
-    const yesBtn = document.getElementById("yes");
-    const content = document.getElementById("content");
-    const buttons = document.getElementById("buttons");
+const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const content = document.getElementById("content");
 
-    let floating = false;
+// UCIEKAJĄCE "NIE"
+let floating = false;
 
-    function moveNo() {
-        if (!floating) {
-            // odpinamy od układu, ale zostaje w tym samym miejscu
-            const rect = noBtn.getBoundingClientRect();
-            noBtn.style.position = "fixed";
-            noBtn.style.left = rect.left + "px";
-            noBtn.style.top = rect.top + "px";
-            floating = true;
-        }
-
-        const containerRect = content.getBoundingClientRect();
-        const padding = 60; // jak daleko od nagłówka może uciec
-
-        const minX = Math.max(0, containerRect.left - padding);
-        const maxX = Math.min(
-            window.innerWidth - noBtn.offsetWidth,
-            containerRect.right + padding - noBtn.offsetWidth
-        );
-
-        const minY = Math.max(0, containerRect.top - padding);
-        const maxY = Math.min(
-            window.innerHeight - noBtn.offsetHeight,
-            containerRect.bottom + padding - noBtn.offsetHeight
-        );
-
-        const yesRect = yesBtn.getBoundingClientRect();
-
-        let x, y;
-        let tries = 0;
-        let ok = false;
-
-        while (!ok && tries < 30) {
-            x = minX + Math.random() * (maxX - minX);
-            y = minY + Math.random() * (maxY - minY);
-            tries++;
-
-            const noRect = {
-                left: x,
-                top: y,
-                right: x + noBtn.offsetWidth,
-                bottom: y + noBtn.offsetHeight
-            };
-
-            const buffer = 20;
-
-            const overlap = !(
-                noRect.right < yesRect.left - buffer ||
-                noRect.left > yesRect.right + buffer ||
-                noRect.bottom < yesRect.top - buffer ||
-                noRect.top > yesRect.bottom + buffer
-            );
-
-            if (!overlap) ok = true;
-        }
-
-        if (ok) {
-            noBtn.style.left = x + "px";
-            noBtn.style.top = y + "px";
-        }
+function moveNo() {
+    if (!floating) {
+        const rect = noBtn.getBoundingClientRect();
+        noBtn.style.position = "fixed";
+        noBtn.style.left = rect.left + "px";
+        noBtn.style.top = rect.top + "px";
+        floating = true;
     }
 
-    noBtn.addEventListener("mouseenter", moveNo);
+    const containerRect = content.getBoundingClientRect();
+    const padding = 60;
 
-    // Serduszka w tle
-    function createHeart() {
-        const heart = document.createElement("div");
-        heart.classList.add("heart");
-        heart.innerText = "💖";
-        heart.style.left = Math.random() * window.innerWidth + "px";
-        heart.style.fontSize = (16 + Math.random() * 24) + "px";
+    const minX = Math.max(0, containerRect.left - padding);
+    const maxX = Math.min(window.innerWidth - noBtn.offsetWidth, containerRect.right + padding - noBtn.offsetWidth);
 
+    const minY = Math.max(0, containerRect.top - padding);
+    const maxY = Math.min(window.innerHeight - noBtn.offsetHeight, containerRect.bottom + padding - noBtn.offsetHeight);
+
+    const yesRect = yesBtn.getBoundingClientRect();
+
+    let x, y, ok = false, tries = 0;
+
+    while (!ok && tries < 30) {
+        x = minX + Math.random() * (maxX - minX);
+        y = minY + Math.random() * (maxY - minY);
+        tries++;
+
+        const buffer = 20;
+        const overlap = !(
+            x + noBtn.offsetWidth < yesRect.left - buffer ||
+            x > yesRect.right + buffer ||
+            y + noBtn.offsetHeight < yesRect.top - buffer ||
+            y > yesRect.bottom + buffer
+        );
+
+        if (!overlap) ok = true;
+    }
+
+    if (ok) {
+        noBtn.style.left = x + "px";
+        noBtn.style.top = y + "px";
+    }
+}
+
+noBtn.addEventListener("mouseenter", moveNo);
+
+// =====================
+// ❤️ SYSTEM SERDUSZEK ❤️
+// =====================
+
+const HEART_SPEED = 3500;
+const HEART_INTERVAL = 500;
+
+function spawnHeart(from, emoji) {
+    const heart = document.createElement("div");
+    heart.innerText = emoji;
+    heart.style.position = "fixed";
+    heart.style.zIndex = 1000;
+    heart.style.fontSize = (24 + Math.random() * 20) + "px";
+    heart.style.transition = `transform ${HEART_SPEED}ms linear, opacity ${HEART_SPEED}ms linear`;
+    heart.style.opacity = "1";
+
+    if (from === "left") {
+        heart.style.left = "-50px";
+        heart.style.top = Math.random() * window.innerHeight + "px";
         document.body.appendChild(heart);
-
-        setTimeout(() => heart.remove(), 3000);
+        heart.getBoundingClientRect();
+        heart.style.transform = `translateX(${window.innerWidth + 100}px)`;
     }
 
-    // Start po 1 sekundzie
-   setTimeout(() => {
-    setInterval(createHeart, 40); // mniejsza liczba = więcej serc = szybciej
-}, 400); // start od razu po wejściu
-    // Klik "Tak"
-    yesBtn.addEventListener("click", () => {
+    if (from === "right") {
+        heart.style.left = (window.innerWidth + 50) + "px";
+        heart.style.top = Math.random() * window.innerHeight + "px";
+        document.body.appendChild(heart);
+        heart.getBoundingClientRect();
+        heart.style.transform = `translateX(-${window.innerWidth + 100}px)`;
+    }
+
+    if (from === "top") {
+        heart.style.left = Math.random() * window.innerWidth + "px";
+        heart.style.top = "-50px";
+        document.body.appendChild(heart);
+        heart.getBoundingClientRect();
+        heart.style.transform = `translateY(${window.innerHeight + 100}px)`;
+    }
+
+    if (from === "bottom") {
+        heart.style.left = Math.random() * window.innerWidth + "px";
+        heart.style.top = (window.innerHeight + 50) + "px";
+        document.body.appendChild(heart);
+        heart.getBoundingClientRect();
+        heart.style.transform = `translateY(-${window.innerHeight + 100}px)`;
+    }
+
+    heart.style.opacity = "0";
+    setTimeout(() => heart.remove(), HEART_SPEED);
+}
+
+// Start: TYLKO z dołu
+function startBottomHearts() {
+    if (window.bottomInterval) return;
+    window.bottomInterval = setInterval(() => {
+        spawnHeart("bottom", "💖");
+    }, HEART_INTERVAL);
+}
+
+// Po pierwszym TAK: z lewej i prawej
+function startSideHearts() {
+    if (window.sideInterval) return;
+    window.sideInterval = setInterval(() => {
+        spawnHeart("left", "💗");
+        spawnHeart("right", "💗");
+    }, HEART_INTERVAL);
+}
+
+// Po drugim TAK: z góry
+function startTopHearts() {
+    if (window.topInterval) return;
+    window.topInterval = setInterval(() => {
+        spawnHeart("top", "💝");
+    }, HEART_INTERVAL);
+}
+
+// Odpalamy serca z dołu od razu
+startBottomHearts();
+
+// =====================
+// LOGIKA STRON
+// =====================
+
+yesBtn.addEventListener("click", () => {
     content.innerHTML = `
         <h1>Juppppppi 💖</h1>
         <div class="big-heart">💘</div>
+        <br>
+        <button id="nextBtn" style="
+            background-color: #ff5c8a;
+            color: white;
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        ">Dalej →</button>
     `;
 
-    // Funkcja tworząca serce lecące do środka
-    function flyHeart(fromLeft) {
-        const heart = document.createElement("div");
-        heart.innerText = "💗";
-        heart.style.position = "fixed";
-        heart.style.top = (Math.random() * window.innerHeight) + "px";
-        heart.style.fontSize = (30 + Math.random() * 30) + "px";
-        heart.style.zIndex = 1000;
-        heart.style.transition = "transform 1.2s linear, opacity 1.2s linear";
+    startSideHearts();
 
-        if (fromLeft) {
-            heart.style.left = "-60px";
-        } else {
-            heart.style.left = (window.innerWidth + 60) + "px";
-        }
-
-        document.body.appendChild(heart);
-
-        // wymuś repaint
-        heart.getBoundingClientRect();
-
-        const targetX = window.innerWidth / 2 + (Math.random() * 200 - 100);
-
-        if (fromLeft) {
-            heart.style.transform = `translateX(${targetX}px)`;
-        } else {
-            heart.style.transform = `translateX(-${window.innerWidth - targetX}px)`;
-        }
-
-        heart.style.opacity = "0";
-
-        setTimeout(() => heart.remove(), 1300);
-    }
-
-    // Co 200 ms wysyłamy serca z obu stron
-    setInterval(() => {
-        flyHeart(true);
-        flyHeart(false);
-    }, 200);
+    document.getElementById("nextBtn").addEventListener("click", showSecond);
 });
+
+function showSecond() {
+    content.innerHTML = `
+        <h1>A zostanieszzz moją dziewczyną? 💕</h1>
+        <div class="buttons">
+            <button id="yes2">Tak</button>
+            <button id="no2">Nie</button>
+        </div>
+    `;
+
+    const yes2 = document.getElementById("yes2");
+    const no2 = document.getElementById("no2");
+
+    yes2.style.backgroundColor = "#ff5c8a";
+    yes2.style.color = "white";
+    no2.style.backgroundColor = "#cccccc";
+
+    no2.addEventListener("mouseenter", () => {
+        no2.style.display = "none";
+    });
+
+    yes2.addEventListener("click", () => {
+        content.innerHTML = `
+            <h1>Wiedziałem 😍💖</h1>
+            <div class="big-heart">💞</div>
+        `;
+
+        startTopHearts(); // ❤️ TERAZ dopiero serca z góry
+    });
+}
 </script>
 
 </body>
